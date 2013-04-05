@@ -97,7 +97,38 @@ var SampleApp = function() {
 
         // Routes for /health, /asciimo and /
         self.routes['/health'] = function(req, res) {
-            res.send('1');
+        	var the_host ='https://george-vustrey-weather.p.mashape.com',
+        	the_path = '/api.php?_method=getForecasts&location=San%20Francisco',
+        	mashape_key = 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a';
+            var options = {
+              host: the_host,
+              port: 80,
+              path: the_path,
+              method: 'GET',
+              headers:{
+              	'X-Mashape-Authorization' : 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a'
+              }
+            };
+            var http = require('https');
+            var req = http.request(options, function(res) {
+              console.log('STATUS: ' + res.statusCode);
+              console.log('HEADERS: ' + JSON.stringify(res.headers));
+              res.on('data', function (chunk) {
+                console.log('BODY: ' + chunk);
+              });
+            });
+            
+            req.on('error', function(e) {
+              console.log('problem with request: ' + e.message);
+            });
+            
+            // write data to request body
+            req.write('data\n');
+            req.write('data\n');
+            req.end();
+            
+            
+            
         };
 
         self.routes['/asciimo'] = function(req, res) {
