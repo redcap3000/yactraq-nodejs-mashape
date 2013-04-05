@@ -1,22 +1,13 @@
 #!/bin/env node
-/*
-
-	Mashape Request Wrapper - Express.js
-	
-	
-	Pass it the host name and whatever parameters you need
-	after modifying your api key.
-	
-	Based on the sample app in the openshift library.
-
-*/
 //  OpenShift sample Node application
-var express = require('express'),https = require('https');
+var express = require('express');
+var fs      = require('fs');
+
 
 /**
  *  Define the sample application.
  */
-var mashapeRequest = function() {
+var SampleApp = function() {
 
     //  Scope.
     var self = this;
@@ -42,6 +33,25 @@ var mashapeRequest = function() {
         };
     };
 
+
+    /**
+     *  Populate the cache.
+     */
+    self.populateCache = function() {
+        if (typeof self.zcache === "undefined") {
+            self.zcache = { 'index.html': '' };
+        }
+
+        //  Local cache for static content.
+        self.zcache['index.html'] = fs.readFileSync('./index.html');
+    };
+
+
+    /**
+     *  Retrieve entry (content) from cache.
+     *  @param {string} key  Key identifying content to retrieve from cache.
+     */
+    self.cache_get = function(key) { return self.zcache[key]; };
 
 
     /**
@@ -76,9 +86,7 @@ var mashapeRequest = function() {
 
 
     /*  ================================================================  */
-    /*  Mashape Request Wrapper - Nodejs
-    	
-    .                       */
+    /*  App server functions (main app logic here).                       */
     /*  ================================================================  */
 
     /**
@@ -86,50 +94,35 @@ var mashapeRequest = function() {
      */
     self.createRoutes = function() {
         self.routes = { };
-		// 'george-vustrey-weather.p.mashape.com'
-        // api.php?_method=getForecasts&location=San%20Francisco
-        self.routes['/:the_host/:the_path'] = function(req, res) {
-        	res.type('application/json');
-        
-        	var the_host = req.params.the_host,
-        
-        	// doing this to avoid 'processing' all get params for simple calls
-        	the_path = req.originalUrl.split('/'+the_host);
-			// Your mashape_key ... could pass this via POST?        	
-//        	mashape_key = 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a';
 
-            var options = {
-              hostname: the_host,
-              port: 443,
-              path: the_path[1],
-              method: 'GET',
-              headers:{
-				"X-Mashape-Authorization" : self.mashape_key
-              }
-            };
-            if(the_host != null && the_path != null){
-	          	var mashape_request = https.get(options, function(res2) {
-	              if(res2.statusCode == 200){
-		              res2.on('data', function (chunk) {
-		                res.write(chunk);
-		              });
-		              res2.on('end', function(chunk){
-		              	 res.end();
-		              });
-		           }else{
-			           	res.end(res.send(404,{error:'Problem with mashape request'}))
-		           }
-	            });
-	            mashape_request.on('error', function(e) {
-	              console.log('problem with request: ' + e.message);
-	              res.end();
-	            });
-            }else{
-            	res.end(res.send(404,{error:'Missing parameters'}));
-            }
-            
+        // Routes for /health, /asciimo, /env and /
+        self.routes['/health'] = function(req, res) {
+            res.send('1');
         };
 
+        self.routes['/asciimo'] = function(req, res) {
+            var link = "http://i.imgur.com/kmbjB.png";
+            res.send("<html><body><img src='" + link + "'></body></html>");
+        };
+
+        self.routes['/env'] = function(req, res) {
+            var content = 'Version: ' + process.version + '\n<br/>\n' +
+                          'Env: {<br/>\n<pre>';
+            //  Add env entries.
+            for (var k in process.env) {
+               content += '   ' + k + ': ' + process.env[k] + '\n';
+            }
+            content += '}\n</pre><br/>\n'
+            res.send(content);
+            res.send('<html>\n' +
+                     '  <head><title>Node.js Process Env</title></head>\n' +
+                     '  <body>\n<br/>\n' + content + '</body>\n</html>');
+        };
+
+        self.routes['/'] = function(req, res) {
+            res.set('Content-Type', 'text/html');
+            res.send(self.cache_get('index.html') );
+        };
     };
 
 
@@ -151,16 +144,9 @@ var mashapeRequest = function() {
     /**
      *  Initializes the sample application.
      */
-    self.initialize = function(key) {
-    	if(typeof key !== 'undefined' && typeof key === 'string')
-        	self.mashape_key = key;
-        else{
-        	// exit and error?
-        	console.log('Missing or invalid mashape key');
-        	process.exit(1);
-        }	
-    
+    self.initialize = function() {
         self.setupVariables();
+        self.populateCache();
         self.setupTerminationHandlers();
 
         // Create the express server and routes.
@@ -178,15 +164,15 @@ var mashapeRequest = function() {
                         Date(Date.now() ), self.ipaddress, self.port);
         });
     };
-    self.constructor = function(){
-    
-    }
 
-};
+};   /*  Sample Application.  */
+
+
+
 /**
- *  main():  Create and Run.
+ *  main():  Main code.
  */
-var mashape = new mashapeRequest();
-mashape.initialize('PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a');
-mashape.start();
+var zapp = new SampleApp();
+zapp.initialize();
+zapp.start();
 
