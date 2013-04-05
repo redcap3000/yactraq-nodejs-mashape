@@ -1,13 +1,22 @@
 #!/bin/env node
-//  OpenShift sample Node application
-var express = require('express');
-var fs      = require('fs');
+/*
 
+	Mashape Request Wrapper - Express.js
+	
+	
+	Pass it the host name and whatever parameters you need
+	after modifying your api key.
+	
+	Based on the sample app in the openshift library.
+
+*/
+//  OpenShift sample Node application
+var express = require('express'),https = require('https');
 
 /**
  *  Define the sample application.
  */
-var SampleApp = function() {
+var mashapeRequest = function() {
 
     //  Scope.
     var self = this;
@@ -33,25 +42,6 @@ var SampleApp = function() {
         };
     };
 
-
-    /**
-     *  Populate the cache.
-     */
-    self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
-        }
-
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
-    };
-
-
-    /**
-     *  Retrieve entry (content) from cache.
-     *  @param {string} key  Key identifying content to retrieve from cache.
-     */
-    self.cache_get = function(key) { return self.zcache[key]; };
 
 
     /**
@@ -86,7 +76,9 @@ var SampleApp = function() {
 
 
     /*  ================================================================  */
-    /*  App server functions (main app logic here).                       */
+    /*  Mashape Request Wrapper - Nodejs
+    	
+    .                       */
     /*  ================================================================  */
 
     /**
@@ -94,52 +86,50 @@ var SampleApp = function() {
      */
     self.createRoutes = function() {
         self.routes = { };
+		// 'george-vustrey-weather.p.mashape.com'
+        // api.php?_method=getForecasts&location=San%20Francisco
+        self.routes['/:the_host/:the_path'] = function(req, res) {
+        	res.type('application/json');
+        
+        	var the_host = req.params.the_host,
+        
+        	// doing this to avoid 'processing' all get params for simple calls
+        	the_path = req.originalUrl.split('/'+the_host);
+			// Your mashape_key ... could pass this via POST?        	
+//        	mashape_key = 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a';
 
-        // Routes for /health, /asciimo and /
-        self.routes['/health'] = function(req, res) {
-        	var the_host ='https://george-vustrey-weather.p.mashape.com',
-        	the_path = '/api.php?_method=getForecasts&location=San%20Francisco',
-        	mashape_key = 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a';
             var options = {
-              host: the_host,
-              port: 80,
-              path: the_path,
+              hostname: the_host,
+              port: 443,
+              path: the_path[1],
               method: 'GET',
               headers:{
-              	'X-Mashape-Authorization' : 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a'
+				"X-Mashape-Authorization" : self.mashape_key
               }
             };
-            var http = require('https');
-            var req = http.request(options, function(res) {
-              console.log('STATUS: ' + res.statusCode);
-              console.log('HEADERS: ' + JSON.stringify(res.headers));
-              res.on('data', function (chunk) {
-                console.log('BODY: ' + chunk);
-              });
-            });
-            
-            req.on('error', function(e) {
-              console.log('problem with request: ' + e.message);
-            });
-            
-            // write data to request body
-            req.write('data\n');
-            req.write('data\n');
-            req.end();
-            
-            
+            if(the_host != null && the_path != null){
+	          	var mashape_request = https.get(options, function(res2) {
+	              if(res2.statusCode == 200){
+		              res2.on('data', function (chunk) {
+		                res.write(chunk);
+		              });
+		              res2.on('end', function(chunk){
+		              	 res.end();
+		              });
+		           }else{
+			           	res.end(res.send(404,{error:'Problem with mashape request'}))
+		           }
+	            });
+	            mashape_request.on('error', function(e) {
+	              console.log('problem with request: ' + e.message);
+	              res.end();
+	            });
+            }else{
+            	res.end(res.send(404,{error:'Missing parameters'}));
+            }
             
         };
 
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
-        };
     };
 
 
@@ -161,9 +151,16 @@ var SampleApp = function() {
     /**
      *  Initializes the sample application.
      */
-    self.initialize = function() {
+    self.initialize = function(key) {
+    	if(typeof key !== 'undefined' && typeof key === 'string')
+        	self.mashape_key = key;
+        else{
+        	// exit and error?
+        	console.log('Missing or invalid mashape key');
+        	process.exit(1);
+        }	
+    
         self.setupVariables();
-        self.populateCache();
         self.setupTerminationHandlers();
 
         // Create the express server and routes.
@@ -181,15 +178,15 @@ var SampleApp = function() {
                         Date(Date.now() ), self.ipaddress, self.port);
         });
     };
+    self.constructor = function(){
+    
+    }
 
-};   /*  Sample Application.  */
-
-
-
+};
 /**
- *  main():  Main code.
+ *  main():  Create and Run.
  */
-var zapp = new SampleApp();
-zapp.initialize();
-zapp.start();
+var mashape = new mashapeRequest();
+mashape.initialize('PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a');
+mashape.start();
 
