@@ -80,22 +80,30 @@ var mashapeRequest = function() {
         self.routes = { };
 		// 'george-vustrey-weather.p'
         // api.php?_method=getForecasts&location=San%20Francisco
-        self.routes['/:the_host/:the_path'] = function(req, res) {
-        	res.type('application/json');
-        	var the_host = req.params.the_host + ".mashape.com",
-        	// doing this to avoid 'processing' all get params for simple calls
-        	the_path = req.originalUrl.split('/'+req.params.the_host);
-			// Your mashape_key ... could pass this via POST?        	
-//        	mashape_key = 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a';
-            var options = {
+	//
+	//
+
+
+	self.routes['/:youtube'] = function(req,res){
+	//
+	//curl --include --request GET 'https://yactraq-yactraq-speech2topics.p.mashape.com/stream-status?url=https://www.youtube.com/watch?v=oZjvDitm6eo&adset=12283w531dnqmpv&secret=139uwst&guid=youtube:NBuLeA7nNFk&start=1&tx=1' \
+ 
+	//http://127.0.0.1:8080/yactraq-yactraq-speech2topics.p/stream-status?url=https://www.youtube.com/watch?v=vytIiCxdtR0&adset=12283w531dnqmpv&secret=139uwst&guid=youtube:NBuLeA7nNFk&start=1&tx=1
+		the_host = 'yactraq-yactraq-speech2topics.p' + ".mashape.com";
+		youtube = req.params.youtube;
+			
+		the_path = '/stream-status?url=https://www.youtube.com/watch?v=' + youtube + '&adset=12283w531dnqmpv&secret=139uwst&start=1&tx=1';
+	 var options = {
               hostname: the_host,
               port: 443,
-              path: the_path[1],
+              path: the_path,
               method: 'GET',
               headers:{
 		"X-Mashape-Authorization" : self.mashape_key
               }
             };
+	 console.log(the_host +' : ' +the_path);
+	 console.log(options);
             if(the_host != null && the_path != null){
 	          	var mashape_request = https.get(options, function(res2) {
 	              if(res2.statusCode == 200){
@@ -116,9 +124,11 @@ var mashapeRequest = function() {
             }else{
             	res.end(res.send(404,{error:'Missing parameters'}));
             }
-            
-        };
+	}
 
+
+//	}
+  
     };
 
 
