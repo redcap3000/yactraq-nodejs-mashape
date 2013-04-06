@@ -41,14 +41,6 @@ var mashapeRequest = function() {
             self.ipaddress = "127.0.0.1";
         };
     };
-
-
-
-    /**
-     *  terminator === the termination handler
-     *  Terminate server on receipt of the specified signal.
-     *  @param {string} sig  Signal to terminate on.
-     */
     self.terminator = function(sig){
         if (typeof sig === "string") {
            console.log('%s: Received %s - terminating sample app ...',
@@ -86,25 +78,22 @@ var mashapeRequest = function() {
      */
     self.createRoutes = function() {
         self.routes = { };
-		// 'george-vustrey-weather.p.mashape.com'
+		// 'george-vustrey-weather.p'
         // api.php?_method=getForecasts&location=San%20Francisco
         self.routes['/:the_host/:the_path'] = function(req, res) {
         	res.type('application/json');
-        
-        	var the_host = req.params.the_host,
-        
+        	var the_host = req.params.the_host + ".mashape.com",
         	// doing this to avoid 'processing' all get params for simple calls
-        	the_path = req.originalUrl.split('/'+the_host);
+        	the_path = req.originalUrl.split('/'+req.params.the_host);
 			// Your mashape_key ... could pass this via POST?        	
 //        	mashape_key = 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a';
-
             var options = {
               hostname: the_host,
               port: 443,
               path: the_path[1],
               method: 'GET',
               headers:{
-				"X-Mashape-Authorization" : self.mashape_key
+		"X-Mashape-Authorization" : self.mashape_key
               }
             };
             if(the_host != null && the_path != null){
@@ -117,7 +106,7 @@ var mashapeRequest = function() {
 		              	 res.end();
 		              });
 		           }else{
-			           	res.end(res.send(404,{error:'Problem with mashape request'}))
+			      res.end(res.send(404,{error:'Problem with mashape request'}))
 		           }
 	            });
 	            mashape_request.on('error', function(e) {
