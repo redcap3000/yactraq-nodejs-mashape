@@ -2,13 +2,12 @@
 /*
 
 	Mashape Request Wrapper - Express.js
+	Hacked up for Yactraq
 	
 	
-	Pass it the host name and whatever parameters you need
-	after modifying your api key.
-	
-	Based on the sample app in the openshift library.
+	Supply with mashape key, yactrac secret, and yactrac adset.
 
+	http://localhost:8080/
 */
 //  OpenShift sample Node application
 var express = require('express'),https = require('https');
@@ -16,7 +15,7 @@ var express = require('express'),https = require('https');
 /**
  *  Define the sample application.
  */
-var mashapeRequest = function() {
+var yactraqRequest = function() {
 
     //  Scope.
     var self = this;
@@ -78,34 +77,27 @@ var mashapeRequest = function() {
      */
     self.createRoutes = function() {
         self.routes = { };
-		// 'george-vustrey-weather.p'
-        // api.php?_method=getForecasts&location=San%20Francisco
-	//
-	//
-
-
 	self.routes['/:youtube'] = function(req,res){
-	//
-	//curl --include --request GET 'https://yactraq-yactraq-speech2topics.p.mashape.com/stream-status?url=https://www.youtube.com/watch?v=oZjvDitm6eo&adset=12283w531dnqmpv&secret=139uwst&guid=youtube:NBuLeA7nNFk&start=1&tx=1' \
- 
-	//http://127.0.0.1:8080/yactraq-yactraq-speech2topics.p/stream-status?url=https://www.youtube.com/watch?v=vytIiCxdtR0&adset=12283w531dnqmpv&secret=139uwst&guid=youtube:NBuLeA7nNFk&start=1&tx=1
-		the_host = 'yactraq-yactraq-speech2topics.p' + ".mashape.com";
-		youtube = req.params.youtube;
-			
-		the_path = '/stream-status?url=https://www.youtube.com/watch?v=' + youtube + '&adset=12283w531dnqmpv&secret=139uwst&start=1&tx=1';
-	 var options = {
+		// Hard coded urls
+	      the_host = 'yactraq-yactraq-speech2topics.p' + ".yactraq.com";
+	      youtube = req.params.youtube;
+	      the_path = 'stream-status?url=https://www.youtube.com/watch?v=' + youtube + '&adset='+ self.adset +'&secret='+self.secret+'&start=1&tx=1';
+	      console.log(the_path);
+	      var options = { 
               hostname: the_host,
-              port: 443,
+              port: 80,
               path: the_path,
               method: 'GET',
               headers:{
-		"X-Mashape-Authorization" : self.mashape_key
+		"X-Mashape-Authorization" : 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a'
               }
             };
-	 console.log(the_host +' : ' +the_path);
-	 console.log(options);
             if(the_host != null && the_path != null){
-	          	var mashape_request = https.get(options, function(res2) {
+	          var mashape_request = https.get(options, function(res2) {
+		      if(typeof res2 != 'undefined'){
+				console.log('response error');
+			      res.end();
+		      }
 	              if(res2.statusCode == 200){
 		              res2.on('data', function (chunk) {
 		                res.write(chunk);
@@ -114,7 +106,7 @@ var mashapeRequest = function() {
 		              	 res.end();
 		              });
 		           }else{
-			      res.end(res.send(404,{error:'Problem with mashape request'}))
+			      res.end(res.send(404,{error:'Problem with yactraq request'}))
 		           }
 	            });
 	            mashape_request.on('error', function(e) {
@@ -125,10 +117,6 @@ var mashapeRequest = function() {
             	res.end(res.send(404,{error:'Missing parameters'}));
             }
 	}
-
-
-//	}
-  
     };
 
 
@@ -150,12 +138,15 @@ var mashapeRequest = function() {
     /**
      *  Initializes the sample application.
      */
-    self.initialize = function(key) {
-    	if(typeof key !== 'undefined' && typeof key === 'string')
+    self.initialize = function(key,adset,secret) {
+    	if(typeof key !== 'undefined' && typeof key === 'string' && typeof adset !== 'undefined' && typeof secret != 'undefined'){
         	self.mashape_key = key;
+		self.adset = adset;
+		self.secret = secret;
+	}
         else{
         	// exit and error?
-        	console.log('Missing or invalid mashape key');
+        	console.log('Missing or invalid yactraq key');
         	process.exit(1);
         }	
     
@@ -185,7 +176,8 @@ var mashapeRequest = function() {
 /**
  *  main():  Create and Run.
  */
-var mashape = new mashapeRequest();
-mashape.initialize('PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a');
-mashape.start();
+var yactraq = new yactraqRequest();
+// yactraq key, adset, secret
+yactraq.initialize('<mashape api key>','< yactraq key >','< secret > ');
+yactraq.start();
 
