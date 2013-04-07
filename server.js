@@ -89,7 +89,7 @@ var yactraqRequest = function() {
               path: the_path,
               method: 'GET',
               headers:{
-		"X-Mashape-Authorization" : 'PUB1XGTqoEZK8iDqSbvKVNX4k85EYy6a'
+		"X-Mashape-Authorization" :	self.mashape_key
               }
             };
             if(the_host != null && the_path != null){
