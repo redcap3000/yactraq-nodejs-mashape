@@ -2,6 +2,7 @@ yactraq mashape nodejs (express js) wrapper
 ====================================================================
 
 Provide key info at bottom of script
+    
     yactraq.initialize('<mashape api key>','< yactraq key >','< secret > ');
     
 Run server.js
